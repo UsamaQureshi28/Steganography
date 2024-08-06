@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            background-image: url('m.jpg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            color:red;
+        }
+
+
+        h1 {
+            text-align: center;
+            font-family: cursive;
+            font-size: 300%;
+            color: #CC0000;
+            background-color:orange;
+        }
+        h2 {
+            text-align: center;
+            color: yellow;
+            font-size:320%;
+            font-family:'Brush Script MT';
+            
+        }
+
+        label {
+            display: inline-block;
+            margin-bottom: 1%;
+            color:red;
+            font-family:'Lucida Sans Unicode';
+        }
+
+        input {
+            width: 7%;
+            padding: 7px;
+            margin-bottom: 10px;
+        }
+       
+        button {
+            background-color: orange;
+            color: red;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        textarea{
+            height:30px;
+            width:450px;
+        }
+            button:hover {
+                background-color:gray;
+            }
+    </style>
+</head>
+<body>
+    <h1>Steganography</h1>
+    <h2>Encryption & Decryption</h2>
+    <div class="container">
+        <label for="Text">Enter Message:</label>
+        <span>
+            <textarea id="text"></textarea>
+        </span>
+        <br>
+        <label class="a" for="a">Value of a:</label>
+        <input class="inputa" type="number" id="a" />
+        <label class="b" for="b">Value of b:</label>
+        <input class="inputb" type="number" id="b" />
+        <br>
+        <button onclick="encryptText()">Encrypt</button>
+        <button onclick="decryptText()">Decrypt</button>
+        <br>
+        <br>
+        <label for="Text">Result:</label>
+        <div style="color:aliceblue" class="result" id="result"></div>
+        <br>
+        <br>
+        <h2>Encoding</h2>
+        <br>
+        <br>
+        <textarea id="messageInput"></textarea>
+        <br>
+        <label for="imageInput">Select Image:</label>
+        <input type="file" id="imageInput" accept="image/*">
+        <br>
+        <button onclick="encode()">Encode</button>
+        <img id="resultImage" style="display: none" />
+        <br>
+        <a id="downloadLink" style="display: none" download="Steganography.jpg">Ciphered Image</a>
+        <br>
+    </div>
+    <h2>Decoding</h2>
+    <div id="decodeSection" style="display: block">
+        <div class="container">
+            <!--<h2>Decode</h2>-->
+            <input type="file"
+                   id="decodeImageInput"
+                   accept="image/*"
+                   onchange="decode()" />
+            <br />
+            <p id="decodedMessage"></p>
+        </div>
+    </div>
+        <script>
+            //affine cipher
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            const alphabetLength = alphabet.length;
+            function caesarCipher(text, a, b) {
+                const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+                const alphabetLength = alphabet.length;
+
+                let result = "";
+                if (a == 0 && b == 0) {
+                    return text;
+                }
+
+                for (let i = 0; i < text.length; i++) {
+                    let char2 = text.charAt(i);
+                    let alphabetindexno = alphabet.indexOf(char2);
+
+                    if (alphabetindexno !== -1) {
+                        let shiftalphabet = (a * alphabetindexno + b) % alphabetLength;
+                        if (shiftalphabet < 0) shiftalphabet += alphabetLength;
+                        result += alphabet.charAt(shiftalphabet);
+                    } else {
+                        result += char2;
+                    }
+                }
+
+                return result;
+            }
+            function modInverse(a, m) {
+                for (let x = 1; x < m; x++) {
+                    if ((a * x) % m === 1) {
+                        return x;
+                    }
+                }
+                return null; // Inverse doesn't exist
+            }
+            function caesarDecipher(ciphertext, a, b) {
+                let result = "";
+                if (a == 0 && b == 0) {
+                    return text;
+                }
+                let messsage = "";
+                const a_inv = modInverse(a, 52);
+
+                for (let i = 0; i < ciphertext.length; i++) {
+                    let char2 = ciphertext.charAt(i);
+                    let alphabetindexno = alphabet.indexOf(char2);
+                    if (alphabetindexno !== -1) {
+                        let shiftalphabet = (a_inv * (alphabetindexno - b + 52)) % 52;
+                        if (shiftalphabet < 0) shiftalphabet += alphabetLength;
+                        messsage += alphabet.charAt(shiftalphabet);
+                    } else {
+                        messsage += char2;
+                    }
+                }
+                return messsage;
+            }
+            function encryptText() {
+                const text = document.getElementById("text").value;
+                const a = parseInt(document.getElementById("a").value);
+                const b = parseInt(document.getElementById("b").value);
+
+                const result = caesarCipher(text, a, b);
+
+                document.getElementById("result").innerText = result;
+            }
+
+            function decryptText() {
+                const ciphertext = document.getElementById("text").value;
+                const a = parseInt(document.getElementById("a").value);
+                const b = parseInt(document.getElementById("b").value);
+
+                const result = caesarDecipher(ciphertext, a, b);
+
+                document.getElementById("result").innerText = result;
+            }
+            function encode() {
+                //encode function
+                const imageInput = document.getElementById("imageInput");
+                const messageInput = document.getElementById("messageInput");
+                const resultImage = document.getElementById("resultImage");
+                const downloadLink = document.getElementById("downloadLink");
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const image = new Image();
+                    image.onload = function () {
+                        const canvas = document.createElement("canvas");
+                        const ctx = canvas.getContext("2d");
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+
+                        ctx.drawImage(image, 0, 0);
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const message =
+                            messageInput.value + String.fromCharCode(0, 0, 0, 0, 0, 0, 0, 0);
+
+                        for (let i = 0; i < message.length; i++) {
+                            const charCode = message.charCodeAt(i);
+                            const binaryMessage = charCode.toString(2).padStart(8, "0");
+
+                            for (let j = 0; j < 8; j++) {
+                                const pixelIndex = i * 8 + j;
+                                const pixelValue = imageData.data[pixelIndex];
+                                const newPixelValue =
+                                    (pixelValue & 0xfe) | parseInt(binaryMessage[j]);
+
+                                imageData.data[pixelIndex] = newPixelValue;
+                            }
+                        }
+
+                        ctx.putImageData(imageData, 0, 0);
+                        resultImage.src = canvas.toDataURL("image/png");
+                        resultImage.style.display = "need";
+                        downloadLink.href = resultImage.src;
+                        downloadLink.style.display = "need";
+
+                        // Trigger the download
+                        downloadLink.click();
+                        alert("Ciphered Image Downloaded Successfully");
+
+                        // Show the decode section after encoding
+                        document.getElementById("encodeSection").style.display = "none";
+                        document.getElementById("decodeSection").style.display = "none";
+                    };
+
+                    image.src = e.target.result;
+                };
+
+                reader.readAsDataURL(imageInput.files[0]);
+            }
+
+            function decode() {
+                //decode function
+                const decodeImageInput = document.getElementById("decodeImageInput");
+                const resultImage = document.getElementById("resultImage");
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = resultImage.width;
+                canvas.height = resultImage.height;
+
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const image = new Image();
+                    image.src = e.target.result;
+
+                    image.onload = function () {
+                        ctx.drawImage(image, 0, 0);
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height
+                        );
+                        let binaryMessage = "";
+                        let terminationDetected = false;
+
+                        for (let i = 0; i < imageData.data.length; i += 8) {
+                            let byte = "";
+
+                            // Extract 8 bits (1 byte) from the image data
+                            for (let j = 0; j < 8; j++) {
+                                const pixelValue = imageData.data[i + j];
+                                byte += (pixelValue & 1).toString();
+                            }
+
+                            // Check for the termination sequence (eight consecutive zeros)
+                            if (byte === "00000000") {
+                                terminationDetected = true;
+                                break;
+                            }
+
+                            // Append the byte to the binary message
+                            binaryMessage += byte;
+                        }
+
+                        if (terminationDetected) {
+                            // Convert binary message to characters
+                            const decodedMessage = binaryMessage
+                                .match(/.{1,8}/g)
+                                .map((byte) => String.fromCharCode(parseInt(byte, 2)))
+                                .join("");
+
+                            document.getElementById("decodedMessage").innerText =
+                                "Result:   " + decodedMessage;
+                        } else {
+                            document.getElementById("decodedMessage").innerText =
+                                "Decoding failed. Termination sequence not found.";
+                        }
+                    };
+                };
+
+                reader.readAsDataURL(decodeImageInput.files[0]);
+            }
+
+            function downloadEncodedImage() {
+                const downloadLink = document.getElementById("downloadLink");
+                downloadLink.click();
+            }
+        </script>
+</body>
+</html>
+
+
+
+
+
+
+
